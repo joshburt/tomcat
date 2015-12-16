@@ -270,6 +270,7 @@ action :configure do
       notifies :restart, "service[#{instance}]"
     end
   else
+=begin
     script "create_keystore-#{instance}" do
       interpreter 'bash'
       action :nothing
@@ -284,25 +285,74 @@ action :configure do
          -password pass:#{node['tomcat']['keystore_password']} \
          -out #{new_resource.keystore_file}
       EOH
-      notifies :restart, 'service[tomcat]'
+      notifies :restart, "service[#{instance}]"
     end
+=end
+      # this needs to be accomplished in a cross-platform way..
+
+
+
+
+    # for windows ensure a .rnd file exists for openssl to function.
+    if platform_family?('windows')
+      env 'RANDFILE' do
+        value "#{ENV['SYSTEMDRIVE']}\\.rnd"
+      end
+    end
+
+=begin
+    cookbook_file "#{node['tomcat']['openssl_certs']}/#{new_resource.ssl_chain_files}" do
+      mode '0644'
+      #notifies :run, "execute[create_keystore_add_chain_files-#{instance}]"
+      #notifies :run, "execute[create_keystore_add_cert_files-#{instance}]"
+    end
+=end
+
 
     cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_cert_file}" do
       mode '0644'
-      notifies :run, "script[create_keystore-#{instance}]"
+      #notifies :run, "execute[create_keystore_add_chain_files-#{instance}]"
+      notifies :run, "execute[create_keystore_add_cert_files-#{instance}]", :immediately
     end
 
     cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_key_file}" do
       mode '0644'
-      notifies :run, "script[create_keystore-#{instance}]"
+      #notifies :run, "execute[create_keystore_add_chain_files-#{instance}]"
+      notifies :run, "execute[create_keystore_add_cert_files-#{instance}]", :immediately
     end
 
-    new_resource.ssl_chain_files.each do |cert|
-      cookbook_file "#{new_resource.config_dir}/#{cert}" do
-        mode '0644'
-        notifies :run, "script[create_keystore-#{instance}]"
-      end
+
+    #new_resource.ssl_chain_files.each do |cert|
+    execute "create_keystore_add_chain_files-#{instance}" do
+      command "\"#{node['tomcat']['cat']}\" #{new_resource.ssl_chain_files} > cacerts.pem"
+      cwd new_resource.config_dir
+      action :nothing
+      notifies :restart, "service[#{instance}]", :delayed
     end
+
+    cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_chain_files}" do
+      mode '0644'
+      notifies :run, "execute[create_keystore_add_chain_files-#{instance}]", :immediately
+      #notifies :run, "execute[create_keystore_add_cert_files-#{instance}]"
+    end
+
+    execute "create_keystore_add_cert_files-#{instance}" do
+      command "\"#{node['tomcat']['openssl']}\" pkcs12 -export -inkey #{new_resource.ssl_key_file} -in #{new_resource.ssl_cert_file} -CAfile cacerts.pem -password pass:#{node['tomcat']['keystore_password']} -out #{new_resource.keystore_file}"
+      #command "\"#{node['tomcat']['openssl']}\" pkcs12 -export -inkey #{new_resource.ssl_key_file} -in #{new_resource.ssl_cert_file} -chain -password pass:#{node['tomcat']['keystore_password']} -out #{new_resource.keystore_file}"
+      cwd new_resource.config_dir
+      action :nothing
+      notifies :restart, "service[#{instance}]", :delayed
+    end
+
+=begin
+    cookbook_file "#{node['tomcat']['openssl_certs']}/#{new_resource.ssl_chain_files}" do
+      mode '0644'
+      #notifies :run, "execute[create_keystore_add_chain_files-#{instance}]"
+      #notifies :run, "execute[create_keystore_add_cert_files-#{instance}]"
+    end
+    #end
+=end
+
   end
 
   unless new_resource.truststore_file.nil?

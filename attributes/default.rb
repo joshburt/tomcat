@@ -71,6 +71,7 @@ when 'rhel', 'fedora'
   default['tomcat']['context_dir'] = "#{node['tomcat']['config_dir']}/Catalina/localhost"
   default['tomcat']['webapp_dir'] = "/var/lib/tomcat#{suffix}/webapps"
   default['tomcat']['keytool'] = 'keytool'
+  default['tomcat']['openssl'] = 'openssl'
   default['tomcat']['lib_dir'] = "#{node['tomcat']['home']}/lib"
   default['tomcat']['endorsed_dir'] = "#{node['tomcat']['lib_dir']}/endorsed"
   default['tomcat']['packages'] = ["tomcat#{suffix}"]
@@ -87,6 +88,7 @@ when 'debian'
   default['tomcat']['context_dir'] = "#{node['tomcat']['config_dir']}/Catalina/localhost"
   default['tomcat']['webapp_dir'] = "/var/lib/tomcat#{node['tomcat']['base_version']}/webapps"
   default['tomcat']['keytool'] = 'keytool'
+  default['tomcat']['openssl'] = 'openssl'
   default['tomcat']['lib_dir'] = "#{node['tomcat']['home']}/lib"
   default['tomcat']['endorsed_dir'] = "#{node['tomcat']['lib_dir']}/endorsed"
 when 'smartos'
@@ -101,6 +103,7 @@ when 'smartos'
   default['tomcat']['context_dir'] = "#{node['tomcat']['config_dir']}/Catalina/localhost"
   default['tomcat']['webapp_dir'] = '/opt/local/share/tomcat/webapps'
   default['tomcat']['keytool'] = '/opt/local/bin/keytool'
+  default['tomcat']['openssl'] = 'openssl'
   default['tomcat']['lib_dir'] = "#{node['tomcat']['home']}/lib"
   default['tomcat']['endorsed_dir'] = "#{node['tomcat']['home']}/lib/endorsed"
   default['tomcat']['packages'] = ['apache-tomcat']
@@ -118,6 +121,7 @@ when 'suse'
   default['tomcat']['context_dir'] = "#{node['tomcat']['config_dir']}/Catalina/localhost"
   default['tomcat']['webapp_dir'] = '/srv/tomcat/webapps'
   default['tomcat']['keytool'] = 'keytool'
+  default['tomcat']['openssl'] = 'openssl'
   default['tomcat']['lib_dir'] = "#{node['tomcat']['home']}/lib"
   default['tomcat']['endorsed_dir'] = "#{node['tomcat']['lib_dir']}/endorsed"
   default['tomcat']['packages'] = ['tomcat']
@@ -146,6 +150,9 @@ when 'windows'
   default['tomcat']['context_dir'] = "#{node['tomcat']['config_dir']}\\Catalina\\localhost"
   default['tomcat']['webapp_dir'] = "#{node['tomcat']['base']}\\webapps"
   default['tomcat']['keytool'] = 'keytool'
+  default['tomcat']['openssl_certs'] = "#{ENV['SYSTEMDRIVE']}\\Program Files (x86)\\Git\\ssl\\certs"
+  default['tomcat']['openssl'] = "#{ENV['SYSTEMDRIVE']}\\Program Files (x86)\\Git\\bin\\openssl"
+  default['tomcat']['cat'] = "#{ENV['SYSTEMDRIVE']}\\Program Files (x86)\\Git\\bin\\cat"
   default['tomcat']['lib_dir'] = "#{node['tomcat']['base']}\\lib"
   default['tomcat']['endorsed_dir'] = "#{node['tomcat']['base']}\\endorsed"
   default['tomcat']['packages'] = ["apache-tomcat-#{node['tomcat']['base_version']}.#{node['tomcat']['windows']['minor_version']}.#{node['tomcat']['windows']['revision_version']}-windows-#{node['tomcat']['windows']['processor_architecture']}.zip"]
@@ -162,6 +169,7 @@ else
   default['tomcat']['context_dir'] = "#{node['tomcat']['config_dir']}/Catalina/localhost"
   default['tomcat']['webapp_dir'] = "/var/lib/tomcat#{node['tomcat']['base_version']}/webapps"
   default['tomcat']['keytool'] = 'keytool'
+  default['tomcat']['openssl'] = 'openssl'
   default['tomcat']['lib_dir'] = "#{node['tomcat']['home']}/lib"
   default['tomcat']['endorsed_dir'] = "#{node['tomcat']['lib_dir']}/endorsed"
 end
