@@ -150,7 +150,7 @@ when 'windows'
   default['tomcat']['context_dir'] = "#{node['tomcat']['config_dir']}\\Catalina\\localhost"
   default['tomcat']['webapp_dir'] = "#{node['tomcat']['base']}\\webapps"
   default['tomcat']['keytool'] = 'keytool'
-  default['tomcat']['openssl_certs'] = "#{ENV['SYSTEMDRIVE']}\\Program Files (x86)\\Git\\ssl\\certs"
+  default['tomcat']['openssl_dir'] = "#{ENV['SYSTEMDRIVE']}\\Program Files (x86)\\Git\\ssl"
   default['tomcat']['openssl'] = "#{ENV['SYSTEMDRIVE']}\\Program Files (x86)\\Git\\bin\\openssl"
   default['tomcat']['cat'] = "#{ENV['SYSTEMDRIVE']}\\Program Files (x86)\\Git\\bin\\cat"
   default['tomcat']['lib_dir'] = "#{node['tomcat']['base']}\\lib"
