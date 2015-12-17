@@ -61,7 +61,7 @@ attribute :ssl_cert_file,
 attribute :ssl_key_file,
   kind_of: String
 attribute :ssl_chain_files,
-  kind_of: Array
+  kind_of: String
 attribute :keystore_file,
   kind_of: String
 attribute :keystore_type,

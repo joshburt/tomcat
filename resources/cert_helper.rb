@@ -4,6 +4,8 @@ default_action :install
 
 attribute :config_dir,
           kind_of: String
+attribute :group,
+          kind_of: String
 
 attribute :ssl_cert_file,
           kind_of: String

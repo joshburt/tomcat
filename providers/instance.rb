@@ -254,6 +254,7 @@ action :configure do
   end
 
   tomcat_cert_helper 'Perform SSL Certificate Processing' do
+    group new_resource.group
     config_dir new_resource.config_dir
     ssl_cert_file new_resource.ssl_cert_file
     ssl_key_file new_resource.ssl_key_file
