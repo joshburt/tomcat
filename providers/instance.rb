@@ -8,8 +8,8 @@ action :configure do
    :maximum_java_heap_size, :thread_stack_size, :permanent_generation_size,
    :maximum_permanent_generation_size, :use_security_manager, :authbind,
    :max_threads, :ssl_max_threads, :ssl_cert_file, :ssl_key_file,
-   :ssl_chain_files, :keystore_file, :keystore_type, :truststore_file,
-   :truststore_type, :certificate_dn, :loglevel, :tomcat_auth, :user,
+   :ssl_chain_files, :keystore_file, :keystore_type, :keystore_password, :truststore_file,
+   :truststore_type, :truststore_password, :certificate_dn, :loglevel, :tomcat_auth, :user,
    :group, :tmp_dir, :lib_dir, :endorsed_dir].each do |attr|
     unless new_resource.instance_variable_get("@#{attr}")
       new_resource.instance_variable_set("@#{attr}", node['tomcat'][attr])
@@ -185,6 +185,7 @@ action :configure do
       action :run
       only_if { ::Win32::Service.exists?(node['tomcat']['base_instance']) == false }
     end
+
     # Configure our JVM memory settings - when running as a windows service
     tomcat_windows_jvm_helper 'configure windows tomcat jvm memory settings' do
       initial_java_heap_size new_resource.initial_java_heap_size unless new_resource.initial_java_heap_size.nil? || new_resource.initial_java_heap_size == ''
@@ -252,93 +253,17 @@ action :configure do
     notifies :restart, "service[#{instance}]"
   end
 
-  if new_resource.ssl_cert_file.nil?
-    execute 'Create Tomcat SSL certificate' do
-      group new_resource.group
-      command <<-EOH
-        #{node['tomcat']['keytool']} \
-         -genkey \
-         -keystore "#{new_resource.config_dir}/#{new_resource.keystore_file}" \
-         -storepass "#{node['tomcat']['keystore_password']}" \
-         -keypass "#{node['tomcat']['keystore_password']}" \
-         -dname "#{node['tomcat']['certificate_dn']}" \
-         -keyalg "RSA"
-      EOH
-      umask 0007
-      creates "#{new_resource.config_dir}/#{new_resource.keystore_file}"
-      action :run
-      notifies :restart, "service[#{instance}]"
-    end
-  else
-=begin
-    script "create_keystore-#{instance}" do
-      interpreter 'bash'
-      action :nothing
-      cwd new_resource.config_dir
-      code <<-EOH
-        cat #{new_resource.ssl_chain_files.join(' ')} > cacerts.pem
-        openssl pkcs12 -export \
-         -inkey #{new_resource.ssl_key_file} \
-         -in #{new_resource.ssl_cert_file} \
-         -chain \
-         -CAfile cacerts.pem \
-         -password pass:#{node['tomcat']['keystore_password']} \
-         -out #{new_resource.keystore_file}
-      EOH
-      notifies :restart, "service[#{instance}]"
-    end
-=end
-      # this needs to be accomplished in a cross-platform way..
-
-
-    # In Windows OpenSSL needs a little help to get going when launched through automation.
-    if platform_family?('windows')
-      env 'OPENSSL_CONF' do
-        value "#{node['tomcat']['openssl_dir']}\\openssl.cnf"
-      end
-    end
-
-    cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_cert_file}" do
-      mode '0644'
-      notifies :stop, "service[#{instance}]", :immediately
-      notifies :run, "execute[create_keystore_add_chain_files-#{instance}]"
-    end
-
-    cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_key_file}" do
-      mode '0644'
-      notifies :stop, "service[#{instance}]", :immediately
-      notifies :run, "execute[create_keystore_add_chain_files-#{instance}]"
-    end
-
-    cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_chain_files}" do
-      mode '0644'
-      notifies :stop, "service[#{instance}]", :immediately
-      notifies :run, "execute[create_keystore_add_chain_files-#{instance}]"
-    end
-
-    #new_resource.ssl_chain_files.each do |cert|
-    execute "create_keystore_add_chain_files-#{instance}" do
-      command "\"#{node['tomcat']['cat']}\" #{new_resource.ssl_chain_files} > cacerts.pem"
-      cwd new_resource.config_dir
-      action :nothing
-      notifies :stop, "service[#{instance}]", :immediately
-      notifies :run, "execute[create_keystore_add_cert_files-#{instance}]"
-    end
-
-    execute "create_keystore_add_cert_files-#{instance}" do
-      command "\"#{node['tomcat']['openssl']}\" pkcs12 -export -inkey #{new_resource.ssl_key_file} -in #{new_resource.ssl_cert_file} -chain -CAfile cacerts.pem -password pass:#{node['tomcat']['keystore_password']} -out #{new_resource.keystore_file}"
-      cwd new_resource.config_dir
-      action :nothing
-      notifies :stop, "service[#{instance}]", :delayed
-      notifies :start, "service[#{instance}]", :delayed
-    end
-
-  end
-
-  unless new_resource.truststore_file.nil?
-    cookbook_file "#{new_resource.config_dir}/#{new_resource.truststore_file}" do
-      mode '0644'
-    end
+  tomcat_cert_helper 'Perform SSL Certificate Processing' do
+    config_dir new_resource.config_dir
+    ssl_cert_file new_resource.ssl_cert_file
+    ssl_key_file new_resource.ssl_key_file
+    ssl_chain_files new_resource.ssl_chain_files
+    keystore_type new_resource.keystore_type
+    keystore_file new_resource.keystore_file
+    keystore_password new_resource.keystore_password
+    truststore_file new_resource.truststore_file
+    instance instance
+    action :install
   end
 
   new_resource.updated_by_last_action(true)

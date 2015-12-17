@@ -67,11 +67,15 @@ attribute :keystore_file,
 attribute :keystore_type,
   kind_of: String,
   equal_to: %w(jks pkcs11 pkcs12)
+attribute :keystore_password,
+  kind_of: String
 attribute :truststore_file,
   kind_of: String
 attribute :truststore_type,
   kind_of: String,
   equal_to: %w(jks pkcs11 pkcs12)
+attribute :truststore_password,
+  kind_of: String
 attribute :certificate_dn,
   kind_of: String
 attribute :loglevel,
