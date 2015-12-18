@@ -42,6 +42,38 @@ action :install do
 
     if node['tomcat']['use_external_ssl_cert_cache']
       # then we get our certs from a location outside of the tomcat cookbook
+      Chef::Log.info '###############################################################################'
+      Chef::Log.info 'Using external certificate source ..'
+      Chef::Log.info '###############################################################################'
+
+      remote_file "#{new_resource.config_dir}/#{new_resource.ssl_cert_file}" do
+        source "#{node['tomcat']['external_ssl_cert_cache']}#{new_resource.ssl_cert_file}"
+        backup false
+        mode '0644'
+        action :create
+        notifies :stop, "service[#{new_resource.instance}]", :immediately
+        notifies :run, "execute[create_keystore_with_cert_files-#{new_resource.instance}]"
+      end
+
+      remote_file "#{new_resource.config_dir}/#{new_resource.ssl_key_file}" do
+        source "#{node['tomcat']['external_ssl_cert_cache']}#{new_resource.ssl_key_file}"
+        backup false
+        mode '0644'
+        action :create
+        notifies :stop, "service[#{new_resource.instance}]", :immediately
+        notifies :run, "execute[create_keystore_with_cert_files-#{new_resource.instance}]"
+      end
+
+      if new_resource.ssl_chain_files && new_resource.ssl_chain_files != ''
+        remote_file "#{new_resource.config_dir}/#{new_resource.ssl_chain_files}" do
+          source "#{node['tomcat']['external_ssl_cert_cache']}#{new_resource.ssl_chain_files}"
+          backup false
+          mode '0644'
+          action :create
+          notifies :stop, "service[#{new_resource.instance}]", :immediately
+          notifies :run, "execute[create_keystore_with_cert_files-#{new_resource.instance}]"
+        end
+      end
 
     else
       # else we are using certs bundled with the cookbook
