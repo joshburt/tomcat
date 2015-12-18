@@ -27,3 +27,6 @@ attribute :truststore_file,
 
 attribute :instance,
           kind_of: String
+
+attribute :cert_cache_location,
+          kind_of: String
