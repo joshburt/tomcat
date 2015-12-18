@@ -42,7 +42,7 @@ action :install do
 
     if node['tomcat']['use_external_ssl_cert_cache']
       # then we get our certs from a location outside of the tomcat cookbook
-      
+
     else
       # else we are using certs bundled with the cookbook
       cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_cert_file}" do
@@ -59,30 +59,26 @@ action :install do
         notifies :run, "execute[create_keystore_with_cert_files-#{new_resource.instance}]"
       end
 
-      cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_chain_files}" do
-        mode '0644'
-        backup false
-        notifies :stop, "service[#{new_resource.instance}]", :immediately
-        notifies :run, "execute[create_keystore_with_cert_files-#{new_resource.instance}]"
+      if new_resource.ssl_chain_files && new_resource.ssl_chain_files != ''
+        cookbook_file "#{new_resource.config_dir}/#{new_resource.ssl_chain_files}" do
+          mode '0644'
+          backup false
+          notifies :stop, "service[#{new_resource.instance}]", :immediately
+          notifies :run, "execute[create_keystore_with_cert_files-#{new_resource.instance}]"
+        end
       end
+
     end
 
     # Note that this sets the keystore type to pkcs12, the node attribute keystore_type needs to be updated
     # accordingly if utilizing this functionality.
+    keystore_cmd = "\"#{node['tomcat']['openssl']}\" pkcs12 -export -inkey #{new_resource.ssl_key_file} -in #{new_resource.ssl_cert_file} -password pass:#{new_resource.keystore_password} -out #{new_resource.keystore_file}"
+    if new_resource.ssl_chain_files && new_resource.ssl_chain_files != ''
+      keystore_cmd << " -chain -CAfile #{new_resource.ssl_chain_files}"
+    end
     execute "create_keystore_with_cert_files-#{new_resource.instance}" do
-      command <<-EOH
-\"#{node['tomcat']['openssl']}\" \
-          pkcs12 \
-          -export \
-          -inkey #{new_resource.ssl_key_file} \
-          -in #{new_resource.ssl_cert_file} \
-          -chain \
-          -CAfile #{new_resource.ssl_chain_files} \
-          -password pass:#{new_resource.keystore_password} \
-          -out #{new_resource.keystore_file}
-      EOH
+      command keystore_cmd
       cwd new_resource.config_dir
-      sensitive true
       action :nothing
       notifies :stop, "service[#{new_resource.instance}]", :delayed
       notifies :start, "service[#{new_resource.instance}]", :delayed
@@ -95,3 +91,4 @@ action :install do
     end
   end
 end
+
