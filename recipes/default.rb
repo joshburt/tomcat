@@ -103,6 +103,10 @@ def create_service(instance)
       # SmartOS doesn't support multiple instances
       service_name 'tomcat'
       supports restart: false, reload: false, status: true
+    when 'windows'
+        # Windoes doesn't support restart, reload ..
+        service_name instance
+        supports restart: false, reload: false, status: true
     else
       service_name instance
     end
