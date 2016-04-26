@@ -37,6 +37,16 @@ attribute :catalina_options,
   kind_of: String
 attribute :java_options,
   kind_of: String
+attribute :initial_java_heap_size,
+  kind_of: String
+attribute :maximum_java_heap_size,
+  kind_of: String
+attribute :thread_stack_size,
+  kind_of: String
+attribute :permanent_generation_size,
+  kind_of: String
+attribute :maximum_permanent_generation_size,
+  kind_of: String
 attribute :use_security_manager,
   kind_of: [TrueClass, FalseClass]
 attribute :authbind,
@@ -51,17 +61,21 @@ attribute :ssl_cert_file,
 attribute :ssl_key_file,
   kind_of: String
 attribute :ssl_chain_files,
-  kind_of: Array
+  kind_of: String
 attribute :keystore_file,
   kind_of: String
 attribute :keystore_type,
   kind_of: String,
   equal_to: %w(jks pkcs11 pkcs12)
+attribute :keystore_password,
+  kind_of: String
 attribute :truststore_file,
   kind_of: String
 attribute :truststore_type,
   kind_of: String,
   equal_to: %w(jks pkcs11 pkcs12)
+attribute :truststore_password,
+  kind_of: String
 attribute :certificate_dn,
   kind_of: String
 attribute :loglevel,
